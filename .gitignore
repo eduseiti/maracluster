@@ -31,3 +31,5 @@ libs/
 bin/build/
 data/
 admin/vagrant/*_output.txt
+
+.vscode/*

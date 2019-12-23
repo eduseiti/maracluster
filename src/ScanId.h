@@ -29,6 +29,14 @@ struct ScanId {
   ScanId() : fileIdx(0u), scannr(0u), scanIndex(UINT_MAX), absoluteScanIndex(UNIT32_MAX) { }
   ScanId(unsigned int f, unsigned int s) : fileIdx(f), scannr(s), scanIndex(UINT_MAX), absoluteScanIndex(UNIT32_MAX) { }
   ScanId(unsigned int f, unsigned int s, unsigned int sI, uint32_t aSI) : fileIdx(f), scannr(s), scanIndex(sI), absoluteScanIndex(aSI) { }
+
+  inline unsigned int getScanIndex(const ScanId& scanId) const { 
+    return scanId.scanIndex; 
+  }
+
+  inline unsigned int getAbsoluteScanIndex(const ScanId& scanId) const { 
+    return scanId.absoluteScanIndex;
+  }
 #else
   unsigned int fileIdx, scannr;
 

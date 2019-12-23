@@ -46,16 +46,6 @@ class SpectrumFileList {
       return scanId.scannr; 
     }
 
-#ifdef USE_EMBEDDINGS
-    inline unsigned int getScanIndex(const ScanId& scanId) const { 
-      return scanId.scanIndex; 
-    }
-
-    inline unsigned int getAbsoluteScanIndex(const ScanId& scanId) const { 
-      return scanId.absoluteScanIndex;
-    }
-#endif
-
     inline std::string getFilePath(const ScanId& scanId) const {
       return getFilePath(scanId.fileIdx); 
     }

@@ -33,4 +33,25 @@ MSEmbeddings::~MSEmbeddings() {
     }
 }
 
+double MSEmbeddings::calculateCosineDistance(PvalueVectorsDbRow& pvecRow,
+                                             PvalueVectorsDbRow& queryPvecRow) {
+
+    embedding_A = allEmbeddings[pvecRow.scannr.getAbsoluteScanIndex()];
+    embedding_B = allEmbeddings[queryPvecRow.scannr.getAbsoluteScanIndex()];
+
+    double multi = 0.0;
+    double norm_A = 0.0;
+    double norm_B = 0.0;
+
+    for (size_t i = 0; i < MSEmbeddings.EMBEDDINGS_DIMENSIONS; i++) {
+        multi += embedding_A[i] * embedding_B[i];
+        norm_A += embedding_A[i] * embedding_A[i];
+        norm_B += embedding_B[i] * embedding_B[i];
+    }
+
+    return -100 * multi / (sqrt(norm_A) * sqrt(norm_B));
+}
+
+
+
 }

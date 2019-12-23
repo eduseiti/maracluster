@@ -974,7 +974,11 @@ void PvalueVectors::calculatePvalues(PvalueVectorsDbRow& pvecRow,
     return;
   }
 #ifdef DOT_PRODUCT
+#ifdef USE_EMBEDDINGS
+  embeddedSpectra_.calculateCosineDistance(pvecRow, queryPvecRow);
+#else
   double cosDist = calculateCosineDistance(pvecRow.pvalCalc.getPeakBinsRef(), pvecRow.pvalCalc.getPeakBinsRef());  
+#endif  
   if (cosDist <= dbPvalThreshold_) {
     pvalBuffer.push_back(PvalueTriplet(std::min(pvecRow.scannr, queryPvecRow.scannr),
                                        std::max(pvecRow.scannr, queryPvecRow.scannr),
@@ -1015,8 +1019,15 @@ void PvalueVectors::calculatePvalue(PvalueVectorsDbRow& pvecRow,
   }
   
 #ifdef DOT_PRODUCT
+#ifdef USE_EMBEDDINGS
+  std::stringstream ss;
+  ss << "SEARCH or PROFILE SEARCH operations do not work with EMBEDDINGS !!!" << std::endl;
+  throw MyException(ss);  
+#else
   double cosDist = calculateCosineDistance(pvecRow.pvalCalc.getPeakBinsRef(), 
                                            peakBins);  
+#endif
+
   if (cosDist <= dbPvalThreshold_) {
     pvalBuffer.push_back(PvalueTriplet(pvecRow.scannr, querySpectrum.scannr,
                                        cosDist));

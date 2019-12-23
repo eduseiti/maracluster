@@ -5,6 +5,7 @@
 #include <fstream>
 #include <vector>
 
+#include "MyException.h"
 #include "PvalueVectors.h"
 
 namespace maracluster {
