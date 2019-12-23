@@ -30,6 +30,12 @@ if(DOT_PRODUCT)
   add_definitions(-DDOT_PRODUCT) # triggers ifdef statements in the C++ code
 endif(DOT_PRODUCT)
 
+option(USE_EMBEDDINGS "Use MSEmbedding to encode spectra before applying dot product similarity measure instead of p values." ON)
+if(USE_EMBEDDINGS)
+  add_definitions(-DUSE_EMBEDDINGS) # triggers ifdef statements in the C++ code
+  add_definitions(-DDOT_PRODUCT) # triggers ifdef statements in the C++ code
+endif(USE_EMBEDDINGS)
+
 option(SINGLE_LINKAGE "Use single instead of complete linkage for clustering." OFF)
 if(SINGLE_LINKAGE)
   add_definitions(-DSINGLE_LINKAGE) # triggers ifdef statements in the C++ code

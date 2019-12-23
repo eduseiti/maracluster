@@ -32,7 +32,11 @@ namespace maracluster {
 
 class SpectrumFileList {
   public:
-    SpectrumFileList() {}
+#ifdef USE_EMBEDDINGS  
+    SpectrumFileList() : totalScansCount_ = 0 { }
+#else
+    SpectrumFileList() { }
+#endif    
     
     ScanId getScanId(const std::string& filePath, const unsigned int scannr);
     
@@ -41,7 +45,17 @@ class SpectrumFileList {
     inline unsigned int getScannr(const ScanId& scanId) const { 
       return scanId.scannr; 
     }
-    
+
+#ifdef USE_EMBEDDINGS
+    inline unsigned int getScanIndex(const ScanId& scanId) const { 
+      return scanId.scanIndex; 
+    }
+
+    inline unsigned int getAbsoluteScanIndex(const ScanId& scanId) const { 
+      return scanId.absoluteScanIndex;
+    }
+#endif
+
     inline std::string getFilePath(const ScanId& scanId) const {
       return getFilePath(scanId.fileIdx); 
     }
@@ -67,11 +81,22 @@ class SpectrumFileList {
     inline const std::vector<std::string>& getFilePaths() const {
       return fileIndexVector_;
     }
+#ifdef USE_EMBEDDINGS
+    unsigned int addFile(const std::string& filePath);
+#endif
     void addFile(const std::string& filePath);
+
     void initFromFile(const std::string& fileListFN);
   protected:
     std::map<std::string, unsigned int> fileIndexMap_;
     std::vector<std::string> fileIndexVector_;
+
+#ifdef USE_EMBEDDINGS
+    /* A counter for the total number of spectra inside a given file; used to associated a spectrum index */
+    std::vector<unsigned int> fileIndexScansCount_;
+
+    uint32_t totalScansCount_;
+#endif    
 };
 
 } /* namespace maracluster */

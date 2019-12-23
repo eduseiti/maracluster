@@ -49,6 +49,10 @@
 #include "PvalueFilterAndSort.h"
 #include "SparseClustering.h"
 
+#ifdef USE_EMBEDDINGS
+#include "MSEmbeddings.h"
+#endif
+
 namespace maracluster {
 
 enum Mode { NONE, BATCH, PVALUE, UNIT_TEST, INDEX, CLUSTER, CONSENSUS, SEARCH, PROFILE_CONSENSUS, PROFILE_SEARCH };
@@ -101,6 +105,10 @@ class MaRaCluster {
   double dbPvalThreshold_; // logPval
   int chargeUncertainty_;
   size_t minConsensusClusterSize_;
+
+#ifdef USE_EMBEDDINGS
+  MSEmbeddings embeddedSpectra_;
+#endif
 };
 
 } /* namespace maracluster */

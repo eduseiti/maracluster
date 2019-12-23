@@ -22,9 +22,19 @@
 namespace maracluster {
 
 struct ScanId {
+
+#ifdef USE_EMBEDDINGS
+  unsigned int fileIdx, scannr, scanIndex, absoluteScanIndex;
+
+  ScanId() : fileIdx(0u), scannr(0u), scanIndex(UINT_MAX), absoluteScanIndex(UNIT32_MAX) { }
+  ScanId(unsigned int f, unsigned int s) : fileIdx(f), scannr(s), scanIndex(UINT_MAX), absoluteScanIndex(UNIT32_MAX) { }
+  ScanId(unsigned int f, unsigned int s, unsigned int sI, uint32_t aSI) : fileIdx(f), scannr(s), scanIndex(sI), absoluteScanIndex(aSI) { }
+#else
   unsigned int fileIdx, scannr;
+
   ScanId() : fileIdx(0u), scannr(0u) { }
   ScanId(unsigned int f, unsigned int s) : fileIdx(f), scannr(s) { }
+#endif
   
   bool operator<(const ScanId& si) const {
     return (fileIdx < si.fileIdx) || 
