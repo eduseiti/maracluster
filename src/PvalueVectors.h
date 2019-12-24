@@ -48,10 +48,6 @@
   #include "BinaryFingerprintMethods.h"
 #endif
 
-#ifdef USE_EMBEDDINGS
-  #include "MSEmbeddings.h"
-#endif
-
 namespace maracluster {
 
 struct PvalueVectorsDbRow {

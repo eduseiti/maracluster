@@ -107,10 +107,12 @@ class MaRaCluster {
   size_t minConsensusClusterSize_;
 
 #ifdef USE_EMBEDDINGS
-  MSEmbeddings embeddedSpectra_;
+  std::string embeddingsFN_;
 #endif
 };
 
 } /* namespace maracluster */
+
+
 
 #endif /* MARACLUSTER_MARACLUSTER_H_ */

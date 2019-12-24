@@ -16,6 +16,10 @@
  
 #include "PvalueVectors.h"
 
+#ifdef USE_EMBEDDINGS
+#include "MaRaCluster.h"
+#endif
+
 namespace maracluster {
 
 void PvalueVectors::calculatePvalueVectors(
@@ -975,7 +979,7 @@ void PvalueVectors::calculatePvalues(PvalueVectorsDbRow& pvecRow,
   }
 #ifdef DOT_PRODUCT
 #ifdef USE_EMBEDDINGS
-  embeddedSpectra_.calculateCosineDistance(pvecRow, queryPvecRow);
+  double cosDist = embeddedSpectra_.calculateCosineDistance(pvecRow, queryPvecRow);
 #else
   double cosDist = calculateCosineDistance(pvecRow.pvalCalc.getPeakBinsRef(), pvecRow.pvalCalc.getPeakBinsRef());  
 #endif  
@@ -1026,12 +1030,12 @@ void PvalueVectors::calculatePvalue(PvalueVectorsDbRow& pvecRow,
 #else
   double cosDist = calculateCosineDistance(pvecRow.pvalCalc.getPeakBinsRef(), 
                                            peakBins);  
-#endif
 
   if (cosDist <= dbPvalThreshold_) {
     pvalBuffer.push_back(PvalueTriplet(pvecRow.scannr, querySpectrum.scannr,
                                        cosDist));
   }
+#endif
 #else
   double targetPval = pvecRow.pvalCalc.computePvalPolyfit(peakBins);
   if (targetPval <= dbPvalThreshold_) {

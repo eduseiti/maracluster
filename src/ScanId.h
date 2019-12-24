@@ -26,16 +26,16 @@ struct ScanId {
 #ifdef USE_EMBEDDINGS
   unsigned int fileIdx, scannr, scanIndex, absoluteScanIndex;
 
-  ScanId() : fileIdx(0u), scannr(0u), scanIndex(UINT_MAX), absoluteScanIndex(UNIT32_MAX) { }
-  ScanId(unsigned int f, unsigned int s) : fileIdx(f), scannr(s), scanIndex(UINT_MAX), absoluteScanIndex(UNIT32_MAX) { }
+  ScanId() : fileIdx(0u), scannr(0u), scanIndex(UINT_MAX), absoluteScanIndex(UINT32_MAX) { }
+  ScanId(unsigned int f, unsigned int s) : fileIdx(f), scannr(s), scanIndex(UINT_MAX), absoluteScanIndex(UINT32_MAX) { }
   ScanId(unsigned int f, unsigned int s, unsigned int sI, uint32_t aSI) : fileIdx(f), scannr(s), scanIndex(sI), absoluteScanIndex(aSI) { }
 
-  inline unsigned int getScanIndex(const ScanId& scanId) const { 
-    return scanId.scanIndex; 
+  inline unsigned int getScanIndex() const { 
+    return scanIndex; 
   }
 
-  inline unsigned int getAbsoluteScanIndex(const ScanId& scanId) const { 
-    return scanId.absoluteScanIndex;
+  inline unsigned int getAbsoluteScanIndex() const { 
+    return absoluteScanIndex;
   }
 #else
   unsigned int fileIdx, scannr;

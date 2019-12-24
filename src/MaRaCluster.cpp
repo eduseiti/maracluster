@@ -18,6 +18,11 @@
 
 namespace maracluster {
 
+#ifdef USE_EMBEDDINGS
+MSEmbeddings embeddedSpectra_ = MSEmbeddings();
+#endif
+
+
 MaRaCluster::MaRaCluster() :
     mode_(NONE), call_(""), percOutFN_(""), fnPrefix_("MaRaCluster"), 
     peakCountFN_(""), datFNFile_(""), 
@@ -178,7 +183,13 @@ bool MaRaCluster::parseOptions(int argc, char **argv) {
       "lib",
       "File readable by ProteoWizard (e.g. ms2, mzML) with spectral library",
       "filename");
-      
+#ifdef USE_EMBEDDINGS
+  cmd.defineOption("E",
+      "embeddings",
+      "Embeddings filename; embeddings will be used to calculate the spectra distance",
+      "filename");
+#endif      
+
   // finally parse and handle return codes (display help etc...)
   cmd.parseArgs(argc, argv);
   
@@ -279,6 +290,10 @@ bool MaRaCluster::parseOptions(int argc, char **argv) {
   }
   if (cmd.optionSet("chargeUncertainty")) chargeUncertainty_ = cmd.getInt("chargeUncertainty", 0, 5);
   if (cmd.optionSet("verbatim")) Globals::VERB = cmd.getInt("verbatim", 0, 5);
+
+#ifdef USE_EMBEDDINGS
+  if (cmd.optionSet("embeddings")) embeddingsFN_ = cmd.options["embeddings"];
+#endif
 
   return true;
 }
@@ -433,6 +448,12 @@ int MaRaCluster::run() {
       maracluster -b /media/storage/mergespec/data/Linfeng/batchcluster/all.txt \
                   -f /media/storage/mergespec/data/Linfeng/batchcluster/output/ 
       */
+
+#ifdef USE_EMBEDDINGS
+      embeddedSpectra_.readEmbeddings(embeddingsFN_);
+#endif     
+
+
       if (spectrumBatchFileFN_.empty()) {
         std::cerr << "Error: no batch file specified with -b/--batch flag" << std::endl;
         return EXIT_FAILURE;

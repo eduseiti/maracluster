@@ -23,7 +23,7 @@ namespace maracluster {
 ScanId SpectrumFileList::getScanId(const std::string& filePath, 
     const unsigned int scannr) {
 
-  return ScanId(fileIndexMap_[filePath], scannr, addFile(filePath), totalScansCount_ - 1);
+  return ScanId(fileIndexMap_[filePath], scannr, addFileEmbeddings(filePath), totalScansCount_ - 1);
 }
 #else
 ScanId SpectrumFileList::getScanId(const std::string& filePath, 
@@ -74,13 +74,11 @@ void SpectrumFileList::addFile(const std::string& filePath) {
 }
 
 #ifdef USE_EMBEDDINGS
-unsigned int SpectrumFileList::addFile(const std::string& filePath) {
-
-  std::map<std::string, unsigned int>::const_iterator it; 
-
-  it = fileIndexMap_.find(filePath) 
+unsigned int SpectrumFileList::addFileEmbeddings(const std::string& filePath) {
 
   unsigned int scanIndex; 
+
+  std::map<std::string, unsigned int>::const_iterator it = fileIndexMap_.find(filePath); 
 
   if (it == fileIndexMap_.end()) {
     fileIndexMap_[filePath] = fileIndexVector_.size();
@@ -89,9 +87,9 @@ unsigned int SpectrumFileList::addFile(const std::string& filePath) {
 
     scanIndex = 0;
   } else {
-    fileIndexScansCount_[it->second]++
+    fileIndexScansCount_[it->second]++;
 
-    scanIndex = fileIndexScansCount_[it->second]
+    scanIndex = fileIndexScansCount_[it->second];
   }
 
   totalScansCount_++;
