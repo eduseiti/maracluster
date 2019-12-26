@@ -36,9 +36,9 @@ using pwiz::msdata::DataProcessing;
 using pwiz::msdata::DataProcessingPtr;
 using pwiz::msdata::ProcessingMethod;
 
-int MSFileMerger::maxMSFilePtrs_ = 40; // memory constrained
-int MSFileMerger::maxSpectraPerFile_ = 200000; // memory constrained
-unsigned int MSFileMerger::maxConsensusSpectraPerFile_ = 200000u; // search engine memory constrained
+int MSFileMerger::maxMSFilePtrs_ = 20; // memory constrained
+int MSFileMerger::maxSpectraPerFile_ = 70000; // memory constrained
+unsigned int MSFileMerger::maxConsensusSpectraPerFile_ = 70000u; // search engine memory constrained
 
 int MSFileMerger::mergeMethod_ = 10;
 bool MSFileMerger::normalize_ = true;
