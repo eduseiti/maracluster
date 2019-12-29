@@ -91,7 +91,11 @@ void SpectrumFiles::getPeakCountsAndPrecursorMzs(
       SpectrumHandler::getMZIntensityPairs(s, mziPairs); 
       
       unsigned int scannr = SpectrumHandler::getScannr(s);
+#ifdef USE_EMBEDDINGS
+      ScanId scanId(fileList.getScanId(spectrumFN, scannr, i));
+#else
       ScanId scanId(fileList.getScanId(spectrumFN, scannr));
+#endif      
       
       std::vector<MassChargeCandidate> mccs;
       getMassChargeCandidates(s, mccs, scanId); // returns mccs sorted by charge

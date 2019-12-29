@@ -31,23 +31,15 @@
 namespace maracluster {
 
 class SpectrumFileList {
-#ifdef USE_EMBEDDINGS
-  protected:
-    /* A counter for the total number of spectra inside a given file; used to associated a spectrum index */
-    std::vector<unsigned int> fileIndexScansCount_;
-
-    uint32_t totalScansCount_;
-#endif    
-
   public:
-#ifdef USE_EMBEDDINGS  
-    SpectrumFileList() : totalScansCount_(0) { }
-#else
     SpectrumFileList() { }
-#endif    
     
     ScanId getScanId(const std::string& filePath, const unsigned int scannr);
-    
+
+#ifdef USE_EMBEDDINGS
+    ScanId getScanId(const std::string& filePath, const unsigned int scannr, const unsigned int scanIndex);
+#endif    
+
     unsigned int getMergeOffset() const { return size(); }
     
     inline unsigned int getScannr(const ScanId& scanId) const { 
@@ -79,9 +71,7 @@ class SpectrumFileList {
     inline const std::vector<std::string>& getFilePaths() const {
       return fileIndexVector_;
     }
-#ifdef USE_EMBEDDINGS
-    unsigned int addFileEmbeddings(const std::string& filePath);
-#endif
+
     void addFile(const std::string& filePath);
 
     void initFromFile(const std::string& fileListFN);

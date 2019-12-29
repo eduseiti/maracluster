@@ -19,17 +19,21 @@
 
 namespace maracluster {
 
-#ifdef USE_EMBEDDINGS
-ScanId SpectrumFileList::getScanId(const std::string& filePath, 
-    const unsigned int scannr) {
-
-  return ScanId(fileIndexMap_[filePath], scannr, addFileEmbeddings(filePath), totalScansCount_ - 1);
-}
-#else
 ScanId SpectrumFileList::getScanId(const std::string& filePath, 
     const unsigned int scannr) {
   addFile(filePath);
   return ScanId(fileIndexMap_[filePath], scannr);
+}
+
+#ifdef USE_EMBEDDINGS
+ScanId SpectrumFileList::getScanId(const std::string& filePath, 
+    const unsigned int scannr, const unsigned int scanIndex) {
+
+  // std::cerr << "getScanId. scannr=" << scannr << " scanIndex=" << scanIndex << std::endl;
+
+  addFile(filePath);
+
+  return ScanId(fileIndexMap_[filePath], scannr, scanIndex);
 }
 #endif
 
@@ -72,30 +76,5 @@ void SpectrumFileList::addFile(const std::string& filePath) {
     fileIndexVector_.push_back(filePath);
   }
 }
-
-#ifdef USE_EMBEDDINGS
-unsigned int SpectrumFileList::addFileEmbeddings(const std::string& filePath) {
-
-  unsigned int scanIndex; 
-
-  std::map<std::string, unsigned int>::const_iterator it = fileIndexMap_.find(filePath); 
-
-  if (it == fileIndexMap_.end()) {
-    fileIndexMap_[filePath] = fileIndexVector_.size();
-    fileIndexVector_.push_back(filePath);
-    fileIndexScansCount_.push_back(1u);
-
-    scanIndex = 0;
-  } else {
-    fileIndexScansCount_[it->second]++;
-
-    scanIndex = fileIndexScansCount_[it->second];
-  }
-
-  totalScansCount_++;
-
-  return scanIndex;
-}
-#endif
 
 } /* namespace maracluster */

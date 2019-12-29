@@ -13,8 +13,9 @@ MSEmbeddings::~MSEmbeddings() {
 double MSEmbeddings::calculateCosineDistance(PvalueVectorsDbRow& pvecRow,
                                              PvalueVectorsDbRow& queryPvecRow) {
 
-    float *embedding_A = allEmbeddings[pvecRow.scannr.getAbsoluteScanIndex()];
-    float *embedding_B = allEmbeddings[queryPvecRow.scannr.getAbsoluteScanIndex()];
+
+    float *embedding_A = spectraFileEmbeddingsMap_[spectraFilenames_[pvecRow.scannr.getFileIndex()]][pvecRow.scannr.getScanIndex()];
+    float *embedding_B = spectraFileEmbeddingsMap_[spectraFilenames_[queryPvecRow.scannr.getFileIndex()]][queryPvecRow.scannr.getScanIndex()];
 
     double multi = 0.0;
     double norm_A = 0.0;
@@ -31,9 +32,13 @@ double MSEmbeddings::calculateCosineDistance(PvalueVectorsDbRow& pvecRow,
 
 void MSEmbeddings::readEmbeddings(std::string& embeddingsFilename) {
 
-    std::cerr << "Loading embeddings from file " << embeddingsFilename << std::endl;
+    //
+    // Read the embeddings entire array
+    // 
 
-    std::ifstream inputFile(embeddingsFilename, std::ios::in | std::ios::binary);
+    std::cerr << "Loading embeddings from file " << embeddingsFilename +  MSEmbeddings::EMBEDDINGS_FILE_EXTENSION << std::endl;
+
+    std::ifstream inputFile(embeddingsFilename + MSEmbeddings::EMBEDDINGS_FILE_EXTENSION, std::ios::in | std::ios::binary);
 
     inputFile.seekg(0, std::ios::end);
     size_t fileSize = inputFile.tellg();
@@ -50,8 +55,44 @@ void MSEmbeddings::readEmbeddings(std::string& embeddingsFilename) {
     inputFile.read((char *) allEmbeddings, sizeof(allEmbeddings));
 
     inputFile.close();
+
+    //
+    // Now read the embeddings original spectra filename
+    //
+
+    std::string line;
+    std::string fileBeingHandled;
+
+    inputFile.open(embeddingsFilename + MSEmbeddings::EMBEDDINGS_ORIGINAL_FILE_EXTENSION);
+
+    uint32_t currentEmbeddingsIndex = 0;
+    uint32_t currentFileStartingIndex = 0;
+
+
+    while (getline(inputFile, line)) {
+        std::map<std::string, float**>::iterator it = spectraFileEmbeddingsMap_.find(line);
+
+        if (it == spectraFileEmbeddingsMap_.end()) {
+            if (currentEmbeddingsIndex > 0) {
+                std::cerr << "-- Original spectra filename " << fileBeingHandled << " had total number of spectra of " << currentEmbeddingsIndex - currentFileStartingIndex << std::endl;
+            }
+
+            std::cerr << "Mapping filename " << line << " to embedding (absolute) index " << currentEmbeddingsIndex << std::endl;
+
+            spectraFileEmbeddingsMap_[line] = &allEmbeddings[currentEmbeddingsIndex];
+
+            currentFileStartingIndex = currentEmbeddingsIndex;
+            fileBeingHandled = line;
+
+            std::cerr << "Filename " << line << " stored as file index " << spectraFilenames_.size() << std::endl;
+
+            spectraFilenames_.push_back(line);
+        }
+
+        currentEmbeddingsIndex++;
+    }
+
+    std::cerr << "Mapped " << currentEmbeddingsIndex << " spectra to filenames" << std::endl;   
 }
-
-
 
 }
