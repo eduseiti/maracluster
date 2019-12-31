@@ -27,7 +27,7 @@ struct ScanId {
   unsigned int fileIdx, scannr, scanIndex;
 
   ScanId() : fileIdx(0u), scannr(0u), scanIndex(UINT_MAX) { }
-  ScanId(unsigned int f, unsigned int s) : fileIdx(f), scannr(s), scanIndex(UINT_MAX) { }
+  ScanId(unsigned int f, unsigned int s) : fileIdx(f), scannr(s), scanIndex(s) { }
   ScanId(unsigned int f, unsigned int s, unsigned int sI) : fileIdx(f), scannr(s), scanIndex(sI) { }
 
   inline unsigned int getFileIndex() const { 

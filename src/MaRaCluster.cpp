@@ -102,7 +102,7 @@ bool MaRaCluster::parseOptions(int argc, char **argv) {
       "string");
   cmd.defineOption("v",
       "verbatim",
-      "Set the verbatim level (lowest: 0, highest: 5, default: 3).",
+      "Set the verbatim level (lowest: 0, highest: 6 (for embeddings additional info), default: 3).",
       "int");
   cmd.defineOption("a",
       "prefix",
@@ -289,7 +289,7 @@ bool MaRaCluster::parseOptions(int argc, char **argv) {
     }
   }
   if (cmd.optionSet("chargeUncertainty")) chargeUncertainty_ = cmd.getInt("chargeUncertainty", 0, 5);
-  if (cmd.optionSet("verbatim")) Globals::VERB = cmd.getInt("verbatim", 0, 5);
+  if (cmd.optionSet("verbatim")) Globals::VERB = cmd.getInt("verbatim", 0, 6);
 
 #ifdef USE_EMBEDDINGS
   if (cmd.optionSet("embeddings")) embeddingsFN_ = cmd.options["embeddings"];
@@ -507,6 +507,9 @@ int MaRaCluster::run() {
               peakCounts.readFromFile(peakCountFN_);
               pvecs.calculatePvalueVectors(spectra.getSpectra(), peakCounts);
             }
+
+            std::cerr << "writeAll_=" << writeAll_ << std::endl;
+
             pvecs.writePvalueVectors(pvalueVectorsBaseFN, writeAll_);
             pvecs.batchCalculateAndClusterPvalues(pvalueTreeFN, scanInfoFN_);
           } else {

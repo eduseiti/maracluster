@@ -20,6 +20,11 @@ class MSEmbeddings {
         static constexpr const char *EMBEDDINGS_FILE_EXTENSION = ".bin";
         static constexpr const char *EMBEDDINGS_ORIGINAL_FILE_EXTENSION = ".txt";
 
+        typedef struct _embeddings {
+            float embedding[EMBEDDINGS_DIMENSIONS];
+        } embeddings;
+
+
         MSEmbeddings() {}
         ~MSEmbeddings();
 
@@ -29,9 +34,9 @@ class MSEmbeddings {
                                        PvalueVectorsDbRow& queryPvecRow);
 
     protected:
-        float **allEmbeddings = NULL;
+        embeddings *allEmbeddings = NULL;
 
-        std::map<std::string, float**> spectraFileEmbeddingsMap_;
+        std::map<std::string, embeddings*> spectraFileEmbeddingsMap_;
         std::vector<std::string> spectraFilenames_;
 };
 

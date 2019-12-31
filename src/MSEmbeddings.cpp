@@ -14,8 +14,25 @@ double MSEmbeddings::calculateCosineDistance(PvalueVectorsDbRow& pvecRow,
                                              PvalueVectorsDbRow& queryPvecRow) {
 
 
-    float *embedding_A = spectraFileEmbeddingsMap_[spectraFilenames_[pvecRow.scannr.getFileIndex()]][pvecRow.scannr.getScanIndex()];
-    float *embedding_B = spectraFileEmbeddingsMap_[spectraFilenames_[queryPvecRow.scannr.getFileIndex()]][queryPvecRow.scannr.getScanIndex()];
+
+    if (Globals::VERB > 5) {
+        std::cerr << "calculateCosineDistance" << std::endl;
+
+        std::cerr << "1. spectraFileEmbeddingsMap_.size()=" << spectraFileEmbeddingsMap_.size() << std::endl;
+        std::cerr << "2. spectraFilenames_.size()=" << spectraFilenames_.size() << std::endl;
+    
+        std::cerr << "3. pvecRow.scannr.getScanIndex()=" << pvecRow.scannr.getScanIndex() << ", pvecRow.scannr.getFileIndex()=" << pvecRow.scannr.getFileIndex() << std::endl;
+        std::cerr << "4. queryPvecRow.scannr.getScanIndex()=" << queryPvecRow.scannr.getScanIndex() << ", queryPvecRow.scannr.getFileIndex()=" << queryPvecRow.scannr.getFileIndex() << std::endl;
+
+        std::cerr << "5. spectraFilenames_[pvecRow.scannr.getFileIndex()]=" << spectraFilenames_[pvecRow.scannr.getFileIndex()] << std::endl;
+        std::cerr << "6. spectraFileEmbeddingsMap_[spectraFilenames_[pvecRow.scannr.getFileIndex()]]=" << spectraFileEmbeddingsMap_[spectraFilenames_[pvecRow.scannr.getFileIndex()]] << std::endl;
+
+        std::cerr << "7. spectraFilenames_[queryPvecRow.scannr.getFileIndex()]=" << spectraFilenames_[queryPvecRow.scannr.getFileIndex()] << std::endl;
+        std::cerr << "8. spectraFileEmbeddingsMap_[spectraFilenames_[queryPvecRow.scannr.getFileIndex()]]=" << spectraFileEmbeddingsMap_[spectraFilenames_[queryPvecRow.scannr.getFileIndex()]] << std::endl;
+    }
+
+    float *embedding_A = spectraFileEmbeddingsMap_[spectraFilenames_[pvecRow.scannr.getFileIndex()]][pvecRow.scannr.getScanIndex()].embedding;
+    float *embedding_B = spectraFileEmbeddingsMap_[spectraFilenames_[queryPvecRow.scannr.getFileIndex()]][queryPvecRow.scannr.getScanIndex()].embedding;
 
     double multi = 0.0;
     double norm_A = 0.0;
@@ -42,17 +59,16 @@ void MSEmbeddings::readEmbeddings(std::string& embeddingsFilename) {
 
     inputFile.seekg(0, std::ios::end);
     size_t fileSize = inputFile.tellg();
-    inputFile.close();
 
     uint32_t numOfEmbeddedSpectra = fileSize / (sizeof(float) * MSEmbeddings::EMBEDDINGS_DIMENSIONS);
 
     std::cerr << "Number of embedded spectra: " << numOfEmbeddedSpectra << std::endl;
 
-    allEmbeddings = (float **) new float[numOfEmbeddedSpectra][MSEmbeddings::EMBEDDINGS_DIMENSIONS];
+    allEmbeddings = new embeddings[numOfEmbeddedSpectra];
 
     inputFile.seekg(0, std::ios::beg);
 
-    inputFile.read((char *) allEmbeddings, sizeof(allEmbeddings));
+    inputFile.read((char *) allEmbeddings, fileSize);
 
     inputFile.close();
 
@@ -70,7 +86,7 @@ void MSEmbeddings::readEmbeddings(std::string& embeddingsFilename) {
 
 
     while (getline(inputFile, line)) {
-        std::map<std::string, float**>::iterator it = spectraFileEmbeddingsMap_.find(line);
+        std::map<std::string, embeddings*>::iterator it = spectraFileEmbeddingsMap_.find(line);
 
         if (it == spectraFileEmbeddingsMap_.end()) {
             if (currentEmbeddingsIndex > 0) {

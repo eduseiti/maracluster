@@ -21,6 +21,11 @@ namespace maracluster {
 
 ScanId SpectrumFileList::getScanId(const std::string& filePath, 
     const unsigned int scannr) {
+
+  if (Globals::VERB > 5) {
+    std::cerr << "getScanId. scannr=" << scannr << std::endl;
+  }
+
   addFile(filePath);
   return ScanId(fileIndexMap_[filePath], scannr);
 }
@@ -29,7 +34,9 @@ ScanId SpectrumFileList::getScanId(const std::string& filePath,
 ScanId SpectrumFileList::getScanId(const std::string& filePath, 
     const unsigned int scannr, const unsigned int scanIndex) {
 
-  // std::cerr << "getScanId. scannr=" << scannr << " scanIndex=" << scanIndex << std::endl;
+  if (Globals::VERB > 5) {
+    std::cerr << "getScanId. scannr=" << scannr << " scanIndex=" << scanIndex << std::endl;
+  }
 
   addFile(filePath);
 

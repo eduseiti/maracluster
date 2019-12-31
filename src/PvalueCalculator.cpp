@@ -298,11 +298,20 @@ double PvalueCalculator::polyval(double x) {
 }
 
 void PvalueCalculator::copyPolyfit(short* peakBins, short* peakScores, double* polyfit) {
+
+  std::cerr << "copyPolyfit: peakBins=" << peakBins << ", peakScores=" << peakScores << ", polyfit=" << polyfit << std::endl;
+  std::cerr << "copyPolyfit: peakBins_.size()=" << peakBins_.size() << ", peakScores_.size()=" << peakScores_.size() << ", polyfit_.size()=" << polyfit_.size() << std::endl;
+
+  std::cerr << "kMaxScoringPeaks=" << kMaxScoringPeaks << ", kPolyfitDegree=" << kPolyfitDegree << std::endl;
+
   peakBins_.resize(kMaxScoringPeaks, 0u);
   peakScores_.resize(kMaxScoringPeaks, 0u);
   std::copy(peakBins_.begin(), peakBins_.begin() + kMaxScoringPeaks, peakBins);
+
+#ifndef DOT_PRODUCT  
   std::copy(peakScores_.begin(), peakScores_.begin() + kMaxScoringPeaks, peakScores);
   std::copy(polyfit_.begin(), polyfit_.begin() + kPolyfitDegree + 1, polyfit);
+#endif  
 }
 
 void PvalueCalculator::serialize(std::string& polyfitString, std::string& peakScorePairsString) {
