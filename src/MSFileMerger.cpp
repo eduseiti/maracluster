@@ -36,9 +36,9 @@ using pwiz::msdata::DataProcessing;
 using pwiz::msdata::DataProcessingPtr;
 using pwiz::msdata::ProcessingMethod;
 
-int MSFileMerger::maxMSFilePtrs_ = 20; // memory constrained
-int MSFileMerger::maxSpectraPerFile_ = 70000; // memory constrained
-unsigned int MSFileMerger::maxConsensusSpectraPerFile_ = 70000u; // search engine memory constrained
+int MSFileMerger::maxMSFilePtrs_ = 40; // memory constrained
+int MSFileMerger::maxSpectraPerFile_ = 200000; // memory constrained
+unsigned int MSFileMerger::maxConsensusSpectraPerFile_ = 200000u; // search engine memory constrained
 
 int MSFileMerger::mergeMethod_ = 10;
 bool MSFileMerger::normalize_ = true;
@@ -407,7 +407,7 @@ void MSFileMerger::mergeSpectraBin(size_t clusterBin, std::vector<MSDataPtr>& ms
     for (unsigned int i = 0; i < numBatches_; ++i) {
       std::string partSpecOutFN = getPartFN(spectrumOutFN_, "part" +
             boost::lexical_cast<std::string>(clusterBin) + "_" +
-            boost::lexical_cast<std::string>(i) + "_tmpfile");
+            boost::lexical_cast<std::string>(i));
       MSDataPtr msd(new MSDataFile(partSpecOutFN));
       msdVector.push_back(msd);
     }
@@ -458,7 +458,7 @@ void MSFileMerger::mergeSpectraBin(size_t clusterBin, std::vector<MSDataPtr>& ms
   for (unsigned int i = 0; i < numBatches_; ++i) {
     std::string partSpecOutFN = getPartFN(spectrumOutFN_, "part" +
           boost::lexical_cast<std::string>(clusterBin) + "_" +
-          boost::lexical_cast<std::string>(i) + "_tmpfile");
+          boost::lexical_cast<std::string>(i));
     if (remove(partSpecOutFN.c_str()) != 0) {
       std::cerr << "Warning: Can't remove " << partSpecOutFN << ": "
                 << strerror(errno) << std::endl;
@@ -488,7 +488,7 @@ void MSFileMerger::writeClusterBins(unsigned int batchIdx,
 
     std::string partSpecOutFN = getPartFN(spectrumOutFN_, "part" +
           boost::lexical_cast<std::string>(i) + "_" +
-          boost::lexical_cast<std::string>(batchIdx) + "_tmpfile");
+          boost::lexical_cast<std::string>(batchIdx));
 
     writeMSData(msdMerged, partSpecOutFN);
   }
