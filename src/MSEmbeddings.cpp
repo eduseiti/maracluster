@@ -70,7 +70,10 @@ double MSEmbeddings::calculateCosineDistance(PvalueVectorsDbRow& pvecRow,
         thisComparison.spectrum_2_scannr     = queryPvecRow.scannr.getScanIndex();
         thisComparison.cosine_similarity     = cosine_similarity;
 
+#pragma omp critical (write_comparisons) 
+{
         outputFile_.write((char *)&thisComparison, sizeof(comparison_data));
+}
 
         comparisonsCount_++;
     }
