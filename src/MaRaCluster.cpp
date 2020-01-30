@@ -33,6 +33,9 @@ MaRaCluster::MaRaCluster() :
     skipFilterAndSort_(false), writeAll_(false), precursorTolerance_(20),
     precursorToleranceDa_(false), dbPvalThreshold_(-5.0), 
     chargeUncertainty_(0), minConsensusClusterSize_(1u)
+#ifdef USE_EMBEDDINGS
+    , embeddingsFN_(""), saveEmbeddingsComparisons_(false)
+#endif    
 {
   boost::filesystem::path outputPath = boost::filesystem::current_path() / boost::filesystem::path("maracluster_output");
   outputFolder_ = outputPath.string();
@@ -185,9 +188,14 @@ bool MaRaCluster::parseOptions(int argc, char **argv) {
       "filename");
 #ifdef USE_EMBEDDINGS
   cmd.defineOption("E",
-      "embeddings",
+      "embeddingsFilename",
       "Embeddings filename; embeddings will be used to calculate the spectra distance",
       "filename");
+  cmd.defineOption("K",
+      "saveEmbeddingsComparisons",
+      "Save Embeddings Comparisons flag; saves all the embeddings comparisons performed during the clustering",
+      "",
+      TRUE_IF_SET);
 #endif      
 
   // finally parse and handle return codes (display help etc...)
@@ -292,7 +300,8 @@ bool MaRaCluster::parseOptions(int argc, char **argv) {
   if (cmd.optionSet("verbatim")) Globals::VERB = cmd.getInt("verbatim", 0, 6);
 
 #ifdef USE_EMBEDDINGS
-  if (cmd.optionSet("embeddings")) embeddingsFN_ = cmd.options["embeddings"];
+  if (cmd.optionSet("embeddingsFilename")) embeddingsFN_ = cmd.options["embeddingsFilename"];
+  if (cmd.optionSet("saveEmbeddingsComparisons")) saveEmbeddingsComparisons_ = true;
 #endif
 
   return true;
@@ -450,7 +459,7 @@ int MaRaCluster::run() {
       */
 
 #ifdef USE_EMBEDDINGS
-      embeddedSpectra_.readEmbeddings(embeddingsFN_);
+      embeddedSpectra_.readEmbeddings(embeddingsFN_, saveEmbeddingsComparisons_);
 #endif     
 
 
@@ -571,6 +580,11 @@ int MaRaCluster::run() {
       time(&endTime);
       double diff_time = difftime(endTime, startTime);
       
+
+#ifdef USE_EMBEDDINGS
+      embeddedSpectra_.finalizeEmbeddings();
+#endif     
+
       std::cerr << "Running MaRaCluster took: "
         << ((double)(endClock - startClock)) / (double)CLOCKS_PER_SEC
         << " cpu seconds or " << diff_time << " seconds wall time" << std::endl;

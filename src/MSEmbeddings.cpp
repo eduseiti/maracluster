@@ -1,19 +1,28 @@
+/******************************************************************************  
+
+ This module allows calculating the spectra distance using embeddings previouly
+ calculated outside MaRaCluster.
+
+ This module is included throught he USE_EMBEDDINGS compilation flag.
+
+ In order to work properly, this module depends on the provided embedded list
+ respect the exact order the spectra is read from the MaRaCluster input files, 
+ according to the BATCH command: not only the spectra input files ― e.g. .mgf
+ or .ms2 files ― have to follow the same order, but also the spectra order
+ within each file shall be the same, as currently the embedding load at the
+ distance calculation process ― performed by the "calculateCosineDistance()"
+ method in this file ― uses the scan loading order (inside 
+ "SpectrumFiles::getPeakCountsAndPrecursorMzs()" method) as the embeddings
+ access index.
+
+******************************************************************************/
+
 #include "MSEmbeddings.h"
 
 namespace maracluster {
 
-MSEmbeddings::~MSEmbeddings() {
-    if (allEmbeddings) {
-        delete allEmbeddings;
-
-        allEmbeddings = NULL;
-    }
-}
-
 double MSEmbeddings::calculateCosineDistance(PvalueVectorsDbRow& pvecRow,
                                              PvalueVectorsDbRow& queryPvecRow) {
-
-
 
     if (Globals::VERB > 5) {
         std::cerr << "calculateCosineDistance" << std::endl;
@@ -21,14 +30,20 @@ double MSEmbeddings::calculateCosineDistance(PvalueVectorsDbRow& pvecRow,
         std::cerr << "1. spectraFileEmbeddingsMap_.size()=" << spectraFileEmbeddingsMap_.size() << std::endl;
         std::cerr << "2. spectraFilenames_.size()=" << spectraFilenames_.size() << std::endl;
     
-        std::cerr << "3. pvecRow.scannr.getScanIndex()=" << pvecRow.scannr.getScanIndex() << ", pvecRow.scannr.getFileIndex()=" << pvecRow.scannr.getFileIndex() << std::endl;
-        std::cerr << "4. queryPvecRow.scannr.getScanIndex()=" << queryPvecRow.scannr.getScanIndex() << ", queryPvecRow.scannr.getFileIndex()=" << queryPvecRow.scannr.getFileIndex() << std::endl;
+        std::cerr << "3. pvecRow.scannr.getScanIndex()=" << pvecRow.scannr.getScanIndex() << 
+                     ", pvecRow.scannr.getFileIndex()=" << pvecRow.scannr.getFileIndex() << std::endl;
+
+        std::cerr << "4. queryPvecRow.scannr.getScanIndex()=" << queryPvecRow.scannr.getScanIndex() << 
+                     ", queryPvecRow.scannr.getFileIndex()=" << queryPvecRow.scannr.getFileIndex() << std::endl;
 
         std::cerr << "5. spectraFilenames_[pvecRow.scannr.getFileIndex()]=" << spectraFilenames_[pvecRow.scannr.getFileIndex()] << std::endl;
+
         std::cerr << "6. spectraFileEmbeddingsMap_[spectraFilenames_[pvecRow.scannr.getFileIndex()]]=" << spectraFileEmbeddingsMap_[spectraFilenames_[pvecRow.scannr.getFileIndex()]] << std::endl;
 
         std::cerr << "7. spectraFilenames_[queryPvecRow.scannr.getFileIndex()]=" << spectraFilenames_[queryPvecRow.scannr.getFileIndex()] << std::endl;
-        std::cerr << "8. spectraFileEmbeddingsMap_[spectraFilenames_[queryPvecRow.scannr.getFileIndex()]]=" << spectraFileEmbeddingsMap_[spectraFilenames_[queryPvecRow.scannr.getFileIndex()]] << std::endl;
+
+        std::cerr << "8. spectraFileEmbeddingsMap_[spectraFilenames_[queryPvecRow.scannr.getFileIndex()]]=" << 
+                     spectraFileEmbeddingsMap_[spectraFilenames_[queryPvecRow.scannr.getFileIndex()]] << std::endl;
     }
 
     float *embedding_A = spectraFileEmbeddingsMap_[spectraFilenames_[pvecRow.scannr.getFileIndex()]][pvecRow.scannr.getScanIndex()].embedding;
@@ -44,10 +59,41 @@ double MSEmbeddings::calculateCosineDistance(PvalueVectorsDbRow& pvecRow,
         norm_B += embedding_B[i] * embedding_B[i];
     }
 
-    return -100 * multi / (sqrt(norm_A) * sqrt(norm_B));
+    double cosine_similarity = multi / (sqrt(norm_A) * sqrt(norm_B));
+
+    if (saveComparisons_) {
+        comparison_data thisComparison;
+
+        thisComparison.spectrum_1_file_index = pvecRow.scannr.getFileIndex();
+        thisComparison.spectrum_1_scannr     = pvecRow.scannr.getScanIndex();
+        thisComparison.spectrum_2_file_index = queryPvecRow.scannr.getFileIndex();
+        thisComparison.spectrum_2_scannr     = queryPvecRow.scannr.getScanIndex();
+        thisComparison.cosine_similarity     = cosine_similarity;
+
+        outputFile_.write((char *)&thisComparison, sizeof(comparison_data));
+
+        comparisonsCount_++;
+    }
+
+
+    // -100 is the factor to take the cosine similarity until the p-value scale.
+
+    return -100 * cosine_similarity;
 }
 
-void MSEmbeddings::readEmbeddings(std::string& embeddingsFilename) {
+
+
+//
+// This method reads the embeddings to be used for the spectrum distance calculation. The embeddings info shall be provided 
+// in 2 different files, described bellow; the "embeddingsFilename" parameter captures the filenames root part:
+//
+// <embeddingsFilename>.bin: Binary file with the each spectrum embeddings for all the N spectrum available.
+//
+// <embeddingsFilename>.txt: Text file with the original file name from which each particular spectrum was read; contains one
+//                           line for each of the N spectrum available.
+//
+
+void MSEmbeddings::readEmbeddings(std::string& embeddingsFilename, bool saveComparisons) {
 
     //
     // Read the embeddings entire array
@@ -60,15 +106,17 @@ void MSEmbeddings::readEmbeddings(std::string& embeddingsFilename) {
     inputFile.seekg(0, std::ios::end);
     size_t fileSize = inputFile.tellg();
 
+    std::cerr << "Filesize: " << fileSize << std::endl;
+
     uint32_t numOfEmbeddedSpectra = fileSize / (sizeof(float) * MSEmbeddings::EMBEDDINGS_DIMENSIONS);
 
     std::cerr << "Number of embedded spectra: " << numOfEmbeddedSpectra << std::endl;
 
-    allEmbeddings = new embeddings[numOfEmbeddedSpectra];
+    allEmbeddings_ = new embeddings[numOfEmbeddedSpectra];
 
     inputFile.seekg(0, std::ios::beg);
 
-    inputFile.read((char *) allEmbeddings, fileSize);
+    inputFile.read((char *) allEmbeddings_, fileSize);
 
     inputFile.close();
 
@@ -95,7 +143,7 @@ void MSEmbeddings::readEmbeddings(std::string& embeddingsFilename) {
 
             std::cerr << "Mapping filename " << line << " to embedding (absolute) index " << currentEmbeddingsIndex << std::endl;
 
-            spectraFileEmbeddingsMap_[line] = &allEmbeddings[currentEmbeddingsIndex];
+            spectraFileEmbeddingsMap_[line] = &allEmbeddings_[currentEmbeddingsIndex];
 
             currentFileStartingIndex = currentEmbeddingsIndex;
             fileBeingHandled = line;
@@ -108,7 +156,27 @@ void MSEmbeddings::readEmbeddings(std::string& embeddingsFilename) {
         currentEmbeddingsIndex++;
     }
 
-    std::cerr << "Mapped " << currentEmbeddingsIndex << " spectra to filenames" << std::endl;   
+    std::cerr << "-- Original spectra filename " << fileBeingHandled << " had total number of spectra of " << currentEmbeddingsIndex - currentFileStartingIndex << std::endl;
+    std::cerr << "Mapped " << currentEmbeddingsIndex << " spectra to filenames" << std::endl;
+
+
+    //
+    // Prepare to save the embeddings comparisons, if the flag has been set
+    //
+
+    if (saveComparisons) {
+        saveComparisons_ = saveComparisons;
+
+        outputFile_.open(embeddingsFilename + MSEmbeddings::EMBEDDINGS_COMPARISONS_FILE_EXTENSION, std::ios::out | std::ios::binary);
+    }
+}
+
+
+
+void MSEmbeddings::finalizeEmbeddings() {
+    outputFile_.close();
+
+    std::cerr << "Stored " << comparisonsCount_ << " comparisons data." << std::endl;
 }
 
 }

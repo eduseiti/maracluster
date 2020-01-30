@@ -108,6 +108,7 @@ class MaRaCluster {
 
 #ifdef USE_EMBEDDINGS
   std::string embeddingsFN_;
+  bool saveEmbeddingsComparisons_;
 #endif
 };
 
