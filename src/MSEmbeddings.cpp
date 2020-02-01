@@ -73,9 +73,9 @@ double MSEmbeddings::calculateCosineDistance(PvalueVectorsDbRow& pvecRow,
 #pragma omp critical (write_comparisons) 
 {
         outputFile_.write((char *)&thisComparison, sizeof(comparison_data));
-}
 
         comparisonsCount_++;
+}
     }
 
 

@@ -129,9 +129,18 @@ void SpectrumClusters::createClusterings(
 
 std::string SpectrumClusters::getClusterFN(
     const std::string resultBaseFN, double threshold) {
-  int negIntThreshold = -1*static_cast<int>(threshold);
-  std::string resultFN = resultBaseFN + "p" +
-      boost::lexical_cast<std::string>(negIntThreshold) + ".tsv";
+
+  // int negIntThreshold = -1*static_cast<int>(threshold);
+  // std::string resultFN = resultBaseFN + "p" +
+  //     boost::lexical_cast<std::string>(negIntThreshold) + ".tsv";
+
+  std::ostringstream thresholdConverter;
+
+  thresholdConverter << std::fixed << std::setprecision(6);
+  thresholdConverter << (-1 * threshold);
+
+  std::string resultFN = resultBaseFN + "p" + thresholdConverter.str() + ".tsv";
+
   return resultFN;
 }
 
