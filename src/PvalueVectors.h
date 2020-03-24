@@ -113,6 +113,14 @@ class PvalueVectors {
   void batchCalculatePvalues();
   void batchCalculateAndClusterPvalues(const std::string& resultTreeFN, 
                                        const std::string& scanInfoFN);
+
+
+  // Added by eduseiti
+
+  void calculateAllSpectraPvalues(const std::string& allSpectraPvaluesFN,
+                                  const std::string& scanInfoFN);
+
+
   void readFingerprints(
     std::vector<std::vector<unsigned short> >& mol_features, 
     std::vector<ScanId>& mol_identifiers, 

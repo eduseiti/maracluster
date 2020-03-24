@@ -59,7 +59,24 @@ double MSEmbeddings::calculateCosineDistance(PvalueVectorsDbRow& pvecRow,
         norm_B += embedding_B[i] * embedding_B[i];
     }
 
-    double cosine_similarity = multi / (sqrt(norm_A) * sqrt(norm_B));
+
+    double cosine_similarity;
+
+    if (norm_A < MSEmbeddings::EPSILON) {
+        if (norm_B < MSEmbeddings::EPSILON) {
+            cosine_similarity = 1;
+        }
+        else {
+            cosine_similarity = 0;
+        }
+    } else {
+        if (norm_B < MSEmbeddings::EPSILON) {
+            cosine_similarity = 0;
+        } else {
+            cosine_similarity = multi / (sqrt(norm_A) * sqrt(norm_B));
+        }
+    }
+
 
     if (saveComparisons_) {
         comparison_data thisComparison;

@@ -32,7 +32,13 @@ class BinaryInterface {
   template <typename Type>
   static void write(const std::vector<Type>& vec, const std::string& outputFN, 
                     bool append) {
+
+    std::cerr << "write size=" << vec.size() << "File: " << outputFN << std::endl;
+
     if (vec.size() > 0) {
+
+      std::cerr << "Step 1" << std::endl;
+
       std::ofstream outfile;
       if (append) {
         outfile.open(outputFN.c_str(), std::ios_base::app | std::ios_base::binary);
@@ -40,10 +46,15 @@ class BinaryInterface {
         outfile.open(outputFN.c_str(), std::ios_base::out | std::ios_base::binary);
       }
       if (outfile.is_open()) {
+
+        std::cerr << "Step 2" << std::endl;
+
         const char* pointer = reinterpret_cast<const char*>(&vec[0]);
         size_t bytes = vec.size() * sizeof(vec[0]);
         outfile.write(pointer, bytes);
       }
+
+      outfile.close();
     }
   }
   

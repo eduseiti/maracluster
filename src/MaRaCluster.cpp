@@ -213,6 +213,7 @@ bool MaRaCluster::parseOptions(int argc, char **argv) {
     else if (mode == "search") mode_ = SEARCH;
     else if (mode == "profile-consensus") mode_ = PROFILE_CONSENSUS;
     else if (mode == "profile-search") mode_ = PROFILE_SEARCH;
+    else if (mode == "spectra-pvalues") mode_ = SPECTRA_PVALUES;
     else {
       std::cerr << "Error: Unknown mode: " << mode << std::endl;
       std::cerr << "Invoke with -h option for help" << std::endl;
@@ -451,6 +452,72 @@ int MaRaCluster::run() {
   }
   
   switch (mode_) {
+    case SPECTRA_PVALUES: {
+
+      if (spectrumBatchFileFN_.empty()) {
+        std::cerr << "Error: no batch file specified with -b/--batch flag" << std::endl;
+        return EXIT_FAILURE;
+      }
+      
+      int error = createIndex();
+      if (error != EXIT_SUCCESS) return EXIT_FAILURE;
+      
+      std::vector<std::string> datFNs;
+      {
+        SpectrumFiles spectrumFiles(outputFolder_, chargeUncertainty_);
+        spectrumFiles.readDatFNsFromFile(datFNFile_, datFNs);
+      }
+      
+      if (datFNs.empty()) {
+        std::cerr << "Error: could not find any ms2 spectra in the input files." << std::endl;
+        return EXIT_FAILURE;
+      }
+      
+      std::vector<std::string> pvalFNs;
+      std::vector<std::string> pvalTreeFNs;
+      std::vector< std::pair<std::string, std::string> > overlapFNs(datFNs.size() - 1);
+      
+      {
+        for (size_t i = 0; i < datFNs.size(); ++i) {
+          // make sure the file exists
+          if (!Globals::fileExists(datFNs[i])) {
+            std::cerr << "Ignoring missing data file " << datFNs[i] << std::endl;
+            continue;
+          }
+
+          std::string datFN = datFNs[i];
+          std::string pvalueVectorsBaseFN = datFN + ".pvalue_vectors";
+          if (i < datFNs.size() - 1) {
+            overlapFNs[i].first = pvalueVectorsBaseFN + ".tail.dat";
+          }
+          if (i > 0) {
+            overlapFNs[i-1].second = pvalueVectorsBaseFN + ".head.dat";
+          }
+          std::string pvaluesFN = datFN + ".pvalues.dat";
+          std::string pvalueTreeFN = datFN + ".pvalue_tree.tsv";
+          
+          PvalueVectors pvecs(pvaluesFN, precursorTolerance_, precursorToleranceDa_, dbPvalThreshold_);
+          {
+            Spectra spectra;
+            spectra.readBatchSpectra(datFN);
+            spectra.sortSpectraByPrecMz();
+            
+            PeakCounts peakCounts;
+            peakCounts.readFromFile(peakCountFN_);
+            pvecs.calculatePvalueVectors(spectra.getSpectra(), peakCounts);
+          }
+
+          std::cerr << "writeAll_=" << writeAll_ << std::endl;
+
+          pvecs.writePvalueVectors(pvalueVectorsBaseFN, writeAll_);
+
+          pvecs.calculateAllSpectraPvalues(datFN + "_allSpectraPvalues.bin", scanInfoFN_);
+        }
+      }
+
+      return(0);
+
+    }
     case BATCH: {
       // This executes the entire pipeline in one go
       /* 

@@ -425,6 +425,111 @@ void PvalueVectors::getPrecMzLimits(
   }
 }
 
+
+
+// Added by eduseiti
+
+typedef struct _spectra_pvalue {
+    unsigned char file_index;
+    unsigned int  scannr;
+    double        pvalue;
+} spectra_pvalue;
+
+
+
+void PvalueVectors::calculateAllSpectraPvalues(
+    const std::string& allSpectraPvaluesFN,
+    const std::string& scanInfoFN) {    
+  if (Globals::VERB > 1) {
+    std::cerr << "Calculating all spectra pvalues. Output file: " << allSpectraPvaluesFN << std::endl;
+  }
+  
+  size_t numTotalPvecs = pvalVecCollection_.size();
+  
+  time_t startTime;
+  time(&startTime);
+  clock_t startClock = clock();
+  
+  std::map<ScanId, std::pair<float, float> > precMzLimits;
+  if (scanInfoFN.size() > 0) {
+    SpectrumFiles reader;
+    reader.readPrecMzLimits(scanInfoFN, precMzLimits);
+  } else {
+    getPrecMzLimits(precMzLimits);
+  }
+  
+  const size_t pvecBatchSize = 10000;
+  const size_t minPvalsForClustering = 20000000; /* = 20M */
+  
+  size_t newStartBatch = 0u, newPoisonedStartBatch = 0u;
+  size_t numPvecBatches = (numTotalPvecs - 1) / pvecBatchSize + 1;
+  
+  std::vector< std::vector<spectra_pvalue> > pvalBuffers(numPvecBatches);
+
+  std::vector<bool> finishedPvalCalc(numPvecBatches);
+  // MT: deque (opposed to vector) does not invalidate references!
+  std::deque<ClusterJob> clusterJobs;
+  
+  // MT: there is only 1 poisoned cluster job, because each job depends on the previous
+  ClusterJob poisonedClusterJob;
+  poisonedClusterJob.finished = true;
+  
+  unsigned int totalSpectra = 0;
+
+#pragma omp parallel for schedule(dynamic)
+  for (int b = 0; b < numTotalPvecs; b += pvecBatchSize) {
+    if (Globals::VERB > 2) {
+      std::cerr << "Processing pvalue vector " << b+1 << "/" << numTotalPvecs << " (" 
+                << b*100/numTotalPvecs << "%)." << std::endl;
+    }
+    int upperBoundIdx = (std::min)(b + pvecBatchSize, numTotalPvecs);
+    
+    for (int i = b; i < upperBoundIdx; ++i) {
+
+      // Calculate the fit of the spectra with itself...
+
+      double spectraPval = pvalVecCollection_[i].pvalCalc.computePvalPolyfit(pvalVecCollection_[i].pvalCalc.getPeakBinsRef());
+
+      spectra_pvalue *spectraPvalue = new(spectra_pvalue);
+
+      spectraPvalue->file_index = pvalVecCollection_[i].scannr.fileIdx;
+      spectraPvalue->scannr     = pvalVecCollection_[i].scannr.scannr;
+      spectraPvalue->pvalue     = spectraPval;
+
+#pragma omp critical (spectra_counting)
+{
+      pvalBuffers[b / pvecBatchSize].push_back(*spectraPvalue);
+
+      totalSpectra++;
+}
+    }
+
+    finishedPvalCalc[b / pvecBatchSize] = true;
+  }
+
+
+
+  std::cerr << "Batches=" << pvalBuffers.size() << " Total spectra=" << totalSpectra << std::endl;
+
+  for (int b = 0; b < numTotalPvecs; b += pvecBatchSize) {
+    std::cerr << "Saving batches=" << b << std::endl;
+
+    BinaryInterface::write<spectra_pvalue>(pvalBuffers[b / pvecBatchSize], allSpectraPvaluesFN, true);
+  }
+
+
+
+
+  clearPvalueVectors();
+  
+  if (Globals::VERB > 1) {
+    std::cerr << "Finished calculating all spectra pvalues." << std::endl;
+    Globals::reportProgress(startTime, startClock, numTotalPvecs - 1, numTotalPvecs);
+  }
+}
+
+
+
 /* This function presumes that the pvalue vectors are sorted by precursor
    mass by writePvalueVectors() */
 void PvalueVectors::batchCalculateAndClusterPvalues(

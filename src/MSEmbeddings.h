@@ -15,7 +15,10 @@ namespace maracluster {
 class MSEmbeddings {
 
     public:
+        // static const unsigned int EMBEDDINGS_DIMENSIONS = 30;
         static const unsigned int EMBEDDINGS_DIMENSIONS = 40;
+
+        static constexpr const double EPSILON = 0.00000001;
 
         static constexpr const char *EMBEDDINGS_FILE_EXTENSION = ".bin";
         static constexpr const char *EMBEDDINGS_ORIGINAL_FILE_EXTENSION = ".txt";
